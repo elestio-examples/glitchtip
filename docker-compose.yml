@@ -28,7 +28,6 @@ services:
       - 172.17.0.1:34948:5432
   redis:
     image: elestio/redis:7.0
-    command: --requirepass ${REDIS_PASSWORD}
   web:
     image: glitchtip/glitchtip
     restart: always
@@ -48,7 +47,6 @@ services:
       - ./uploads:/code/uploads
   migrate:
     image: glitchtip/glitchtip
-    restart: always
     depends_on: *default-depends_on
     command: "./manage.py migrate"
     environment: *default-environment
