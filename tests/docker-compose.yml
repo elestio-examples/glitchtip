@@ -1,65 +1,64 @@
 version: "3.8"
 x-environment: &default-environment
-  DATABASE_URL: postgres://postgres:${DB_PASSWORD}@postgres:5432/glitchtip
-  SECRET_KEY: ${SECRET_KEY}
-  PORT: 8000
-  EMAIL_URL: smtp://172.17.0.1:25/?skip_ssl_verify=true&legacy_ssl=false&smtp_ssl_enabled=false&disable_starttls=true
-  GLITCHTIP_DOMAIN: https://${DOMAIN}
-  DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
-  CELERY_WORKER_AUTOSCALE: "1,3" # Scale between 1 and 3 to prevent excessive memory usage. Change it or remove to set it to the number of cpu cores.
-  CELERY_WORKER_MAX_TASKS_PER_CHILD: "10000"
+  DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+  SECRET_KEY: ${SECRET_KEY} # gitleaks:allow
+  ENABLE_ORGANIZATION_CREATION: "true"
+  ENABLE_TEST_API: "true"
+  DEBUG: "true"
+  EMAIL_BACKEND: "django.core.mail.backends.console.EmailBackend"
+  ENABLE_OBSERVABILITY_API: "true"
+  CELERY_WORKER_CONCURRENCY: 1
+  # admin user to login to the admin web UI
+  APPSRE_API_USER_1_EMAIL: ${ADMIN_EMAIL}
+  APPSRE_API_USER_1_PASSWORD: ${ADMIN_PASSWORD} # gitleaks:allow
+  # user to use for the API
+  APPSRE_API_USER_2_EMAIL: "glitchtip@qontract-reconcile.org"
+  APPSRE_API_USER_2_TOKEN: "token" # gitleaks:allow
 
 x-depends_on: &default-depends_on
   - postgres
   - redis
 
+name: glitchtip-dev
+
 services:
   postgres:
-    image: elestio/postgres:15
-    restart: always
+    image: postgres:13
     environment:
-      POSTGRES_DB: glitchtip
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      PGDATA: /var/lib/postgresql/data
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    restart: unless-stopped
     volumes:
-      - ./pg-data:/var/lib/postgresql/data
-    ports:
-      - 172.17.0.1:34948:5432
+      - pg-data:/var/lib/postgresql/data
+    
   redis:
-    image: elestio/redis:7.0
-  web:
+    image: redis
+    restart: unless-stopped
+    
+  glitchtip:
     image: elestio4test/glitchtip
-    restart: always
+    command:
+      - bin/run-migrate-and-runserver.sh
     depends_on: *default-depends_on
     ports:
-      - "172.17.0.1:4024:8000"
+      - "172.17.0.1:8000:8080"
     environment: *default-environment
-    volumes:
-      - ./uploads:/code/uploads
+    restart: on-failure
   worker:
     image: elestio4test/glitchtip
-    restart: always
-    command: ./bin/run-celery-with-beat.sh
+    command:
+      - bin/run-celery-with-beat.sh
     depends_on: *default-depends_on
     environment: *default-environment
-    volumes:
-      - ./uploads:/code/uploads
-  migrate:
+    
+    restart: on-failure
+  init-api-users:
     image: elestio4test/glitchtip
-    restart: always
+    command:
+      - python
+      - appsre/create-api-users.py
     depends_on: *default-depends_on
-    command: "./manage.py migrate"
     environment: *default-environment
+    restart: on-failure
 
-  pgadmin4:
-    image: dpage/pgadmin4:latest
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${ADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${ADMIN_PASSWORD}
-      PGADMIN_LISTEN_PORT: 8080
-    ports:
-      - "172.17.0.1:38619:8080"
-    volumes:
-      - ./servers.json:/pgadmin4/servers.json
+volumes:
+  pg-data:
