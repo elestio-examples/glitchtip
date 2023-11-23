@@ -29,7 +29,7 @@ services:
   redis:
     image: elestio/redis:7.0
   web:
-    image: glitchtip/glitchtip
+    image: glitchtip/glitchtip:${SOFTWARE_VERSION_TAG}
     restart: always
     depends_on: *default-depends_on
     ports:
@@ -38,7 +38,8 @@ services:
     volumes:
       - ./uploads:/code/uploads
   worker:
-    image: glitchtip/glitchtip
+    image: glitchtip/glitchtip:${SOFTWARE_VERSION_TAG}
+    restart: always
     restart: always
     command: ./bin/run-celery-with-beat.sh
     depends_on: *default-depends_on
@@ -46,7 +47,8 @@ services:
     volumes:
       - ./uploads:/code/uploads
   migrate:
-    image: glitchtip/glitchtip
+    image: glitchtip/glitchtip:${SOFTWARE_VERSION_TAG}
+    restart: always
     depends_on: *default-depends_on
     command: "./manage.py migrate"
     environment: *default-environment
