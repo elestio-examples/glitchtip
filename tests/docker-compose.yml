@@ -47,6 +47,7 @@ services:
       - ./uploads:/code/uploads
   migrate:
     image: elestio4test/glitchtip
+    restart: always
     depends_on: *default-depends_on
     command: "./manage.py migrate"
     environment: *default-environment
