@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 mkdir glitchtip-frontend
-git clone https://gitlab.com/glitchtip/glitchtip-frontend.git litchtip-frontend/
+git clone https://gitlab.com/glitchtip/glitchtip-frontend.git glitchtip-frontend/
 cd glitchtip-frontend/
 npm ci --force
 npm run build-prod
