@@ -40,7 +40,6 @@ services:
   worker:
     image: glitchtip/glitchtip:${SOFTWARE_VERSION_TAG}
     restart: always
-    restart: always
     command: ./bin/run-celery-with-beat.sh
     depends_on: *default-depends_on
     environment: *default-environment
