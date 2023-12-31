@@ -28,6 +28,7 @@ services:
       - 172.17.0.1:34948:5432
   redis:
     image: elestio/redis:7.0
+    restart: always
   web:
     image: glitchtip/glitchtip:${SOFTWARE_VERSION_TAG}
     restart: always
