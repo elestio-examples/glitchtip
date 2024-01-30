@@ -1,6 +1,9 @@
 #set env vars
 set -o allexport; source .env; set +o allexport;
 
+mkdir -p ./uploads;
+chmod -R 777 ./uploads;
+
 SECRET_KEY=${SECRET_KEY:-`openssl rand -hex 32`}
 
 cat << EOT >> ./.env
